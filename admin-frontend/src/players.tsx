@@ -11,7 +11,6 @@ import {
   Show,
   SimpleShowLayout,
   ReferenceField,
-  ReferenceInput,
   SelectInput,
   FunctionField,
   DeleteButton,
@@ -20,10 +19,40 @@ import {
   CreateButton,
   TopToolbar,
   ExportButton,
-  ImageField,
-  UrlField,
+  useGetList,
 } from 'react-admin'
-import { Card, CardContent, Typography, Chip, Avatar } from '@mui/material'
+import { Chip, Avatar } from '@mui/material'
+
+// Componente personalizado para el selector de equipos
+const TeamSelectInput = (props: any) => {
+  const { data: teams, isLoading } = useGetList('teams', {
+    pagination: { page: 1, perPage: 1000 },
+    sort: { field: 'name', order: 'ASC' },
+  })
+
+  if (isLoading) {
+    return <SelectInput {...props} choices={[]} />
+  }
+
+  const choices = [
+    { id: null, name: '🆓 Agente Libre', description: 'Sin equipo asignado' },
+    ...(teams || []).map((team: any) => ({
+      id: team.teamId,
+      name: `🏆 ${team.name}`,
+      description: team.description || 'Sin descripción',
+    })),
+  ]
+
+  return (
+    <SelectInput
+      {...props}
+      choices={choices}
+      optionText={(choice: any) => choice.name}
+      optionValue="id"
+      emptyText="Seleccionar equipo..."
+    />
+  )
+}
 
 // Componente personalizado para mostrar estadísticas
 const StatsField = ({ record }: { record?: any }) => {
@@ -109,9 +138,7 @@ export const PlayerCreate = () => (
   <Create>
     <SimpleForm>
       <TextInput source="name" label="Nombre del Jugador" required fullWidth />
-      <ReferenceInput source="teamId" reference="teams" label="Equipo">
-        <SelectInput optionText="name" optionValue="teamId" emptyText="Sin equipo (Agente Libre)" />
-      </ReferenceInput>
+      <TeamSelectInput source="teamId" label="Asignar Equipo" fullWidth />
       <TextInput source="bio" label="Biografía" multiline rows={3} fullWidth />
       <TextInput source="photoUrl" label="URL de Foto" type="url" fullWidth />
       <TextInput
@@ -144,9 +171,7 @@ export const PlayerEdit = () => (
   <Edit>
     <SimpleForm>
       <TextInput source="name" label="Nombre del Jugador" required fullWidth />
-      <ReferenceInput source="teamId" reference="teams" label="Equipo">
-        <SelectInput optionText="name" optionValue="teamId" emptyText="Sin equipo (Agente Libre)" />
-      </ReferenceInput>
+      <TeamSelectInput source="teamId" label="Reasignar Equipo" fullWidth />
       <TextInput source="bio" label="Biografía" multiline rows={3} fullWidth />
       <TextInput source="photoUrl" label="URL de Foto" type="url" fullWidth />
       <TextInput

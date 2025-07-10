@@ -62,6 +62,19 @@ const convertFromReactAdmin = (resource: string, data: any) => {
   delete converted.updatedAt
   delete converted.team
 
+  // Para players, mapear teamId a team_id si existe
+  if (resource === 'players' && 'teamId' in converted) {
+    converted.team_id = converted.teamId
+    delete converted.teamId
+  }
+
+  // Para players, mapear photoUrl a photo_url si existe
+  if (resource === 'players' && 'photoUrl' in converted) {
+    converted.photo_url = converted.photoUrl
+    delete converted.photoUrl
+  }
+
+  console.log('convertFromReactAdmin result:', converted)
   return converted
 }
 
@@ -151,15 +164,28 @@ export const dataProvider: DataProvider = {
     const url = `${apiUrl}/${resource}/${params.id}`
     const data = convertFromReactAdmin(resource, params.data)
 
+    console.log('=== DataProvider Update ===')
+    console.log('Resource:', resource)
+    console.log('URL:', url)
+    console.log('Params:', params)
+    console.log('Original data:', params.data)
+    console.log('Converted data:', data)
+
     try {
       const { json } = await httpClient(url, {
         method: 'PATCH',
         body: JSON.stringify(data),
       })
 
+      console.log('Backend response:', json)
       const responseData = json.data || json
+      console.log('Response data:', responseData)
+
+      const convertedResponse = convertToReactAdmin(resource, responseData)
+      console.log('Converted response:', convertedResponse)
+
       return {
-        data: convertToReactAdmin(resource, responseData),
+        data: convertedResponse,
       }
     } catch (error) {
       console.error(`Error updating ${resource}:`, error)

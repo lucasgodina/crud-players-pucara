@@ -136,45 +136,68 @@ export default class PlayersController {
    */
   async update({ params, request, response }: HttpContext) {
     try {
+      console.log('=== Player Update Request ===')
+      console.log('Player ID:', params.player_id)
+      console.log('Request body:', request.body())
+      console.log('Request headers:', request.headers())
+
       const player = await Player.findBy('player_id', params.player_id)
 
       if (!player) {
+        console.log('Player not found:', params.player_id)
         return response.notFound({
           message: `El jugador con ID '${params.player_id}' no fue encontrado`,
           code: 'NOT_FOUND',
         })
       }
 
+      console.log('Current player data:', player.toJSON())
+
       const data = request.only(['name', 'team_id', 'bio', 'stats', 'photo_url'])
+      console.log('Extracted data:', data)
 
       // Validate team exists if team_id is provided (and not null)
       if (data.team_id !== undefined && data.team_id !== null) {
+        console.log('Validating team_id:', data.team_id)
         const team = await Team.findBy('team_id', data.team_id)
         if (!team) {
+          console.log('Team not found:', data.team_id)
           return response.notFound({
             message: `El equipo con ID '${data.team_id}' no existe`,
             code: 'TEAM_NOT_FOUND',
           })
         }
+        console.log('Team found:', team.toJSON())
       }
 
       // Update only provided fields
       if (data.name !== undefined) player.name = data.name
-      if (data.team_id !== undefined) player.teamId = data.team_id
+      if (data.team_id !== undefined) {
+        console.log('Updating teamId from', player.teamId, 'to', data.team_id)
+        player.teamId = data.team_id
+      }
       if (data.bio !== undefined) player.bio = data.bio
       if (data.stats !== undefined) player.stats = data.stats
       if (data.photo_url !== undefined) player.photoUrl = data.photo_url
 
+      console.log('Player before save:', player.toJSON())
       await player.save()
+      console.log('Player after save:', player.toJSON())
 
       // Load team relation
       await player.load('team')
+      console.log('Player with team loaded:', player.toJSON())
 
-      return response.ok(player)
+      const responseData = player.toJSON()
+      console.log('Response data:', responseData)
+
+      return response.ok(responseData)
     } catch (error) {
+      console.error('Error updating player:', error)
       return response.internalServerError({
         message: 'Error al actualizar el jugador',
         code: 'INTERNAL_ERROR',
+        error: error.message,
       })
     }
   }
