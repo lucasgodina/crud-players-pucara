@@ -2,6 +2,13 @@ import type { HttpContext } from '@adonisjs/core/http'
 import Player from '#models/player'
 import Team from '#models/team'
 import { v4 as uuidv4 } from 'uuid'
+import {
+  createPlayerValidator,
+  updatePlayerValidator,
+  playerIdValidator,
+  assignTeamValidator,
+  playerFiltersValidator,
+} from '#validators/player_validator'
 
 export default class PlayersController {
   /**
@@ -10,23 +17,34 @@ export default class PlayersController {
    */
   async index({ request, response }: HttpContext) {
     try {
-      const teamId = request.input('teamId')
-      const isFreeAgent = request.input('isFreeAgent')
+      // Validate query parameters
+      const filters = await playerFiltersValidator.validate({
+        teamId: request.input('teamId'),
+        isFreeAgent: request.input('isFreeAgent'),
+      })
 
       let query = Player.query().preload('team')
 
       // Filter by free agents (no team)
-      if (isFreeAgent === true || isFreeAgent === 'true') {
+      if (filters.isFreeAgent === true) {
         query = query.whereNull('team_id')
       }
       // Filter by team ID (only if not filtering free agents)
-      else if (teamId) {
-        query = query.where('team_id', teamId)
+      else if (filters.teamId) {
+        query = query.where('team_id', filters.teamId)
       }
 
       const players = await query
       return response.ok(players)
     } catch (error) {
+      if (error.messages) {
+        return response.badRequest({
+          message: 'Parámetros de consulta inválidos',
+          code: 'VALIDATION_ERROR',
+          errors: error.messages,
+        })
+      }
+
       return response.internalServerError({
         message: 'Error al obtener los jugadores',
         code: 'INTERNAL_ERROR',
@@ -40,15 +58,8 @@ export default class PlayersController {
    */
   async store({ request, response }: HttpContext) {
     try {
-      const data = request.only(['name', 'team_id', 'bio', 'stats', 'photo_url'])
-
-      // Validate required fields
-      if (!data.name) {
-        return response.badRequest({
-          message: 'El campo name es obligatorio',
-          code: 'VALIDATION_ERROR',
-        })
-      }
+      // Validate request data
+      const data = await request.validateUsing(createPlayerValidator)
 
       // Validate team exists if team_id is provided
       if (data.team_id) {
@@ -77,6 +88,14 @@ export default class PlayersController {
 
       return response.created(player)
     } catch (error) {
+      if (error.messages) {
+        return response.badRequest({
+          message: 'Datos de entrada inválidos',
+          code: 'VALIDATION_ERROR',
+          errors: error.messages,
+        })
+      }
+
       return response.internalServerError({
         message: 'Error al crear el jugador',
         code: 'INTERNAL_ERROR',
