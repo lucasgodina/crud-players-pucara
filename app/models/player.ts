@@ -4,8 +4,8 @@ import type { BelongsTo } from '@adonisjs/lucid/types/relations'
 import Team from './team.js'
 
 export default class Player extends BaseModel {
-  @column({ isPrimary: true })
-  declare id: string // Assuming id is a UUID
+  @column({ isPrimary: true, columnName: 'player_id' })
+  declare playerId: string
 
   @column()
   declare name: string
@@ -16,13 +16,16 @@ export default class Player extends BaseModel {
   @column()
   declare stats: Record<string, string> | null
 
-  @column()
+  @column({ columnName: 'photo_url' })
   declare photoUrl: string | null
 
-  @column()
+  @column({ columnName: 'team_id' })
   declare teamId: string | null
 
-  @belongsTo(() => Team)
+  @belongsTo(() => Team, {
+    foreignKey: 'teamId',
+    localKey: 'teamId',
+  })
   declare team: BelongsTo<typeof Team>
 
   @column.dateTime({ autoCreate: true })

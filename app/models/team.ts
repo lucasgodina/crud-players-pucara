@@ -4,8 +4,8 @@ import type { HasMany } from '@adonisjs/lucid/types/relations'
 import Player from './player.js'
 
 export default class Team extends BaseModel {
-  @column({ isPrimary: true })
-  declare id: string // Assuming id is a UUID
+  @column({ isPrimary: true, columnName: 'team_id' })
+  declare teamId: string
 
   @column()
   declare name: string
@@ -16,7 +16,9 @@ export default class Team extends BaseModel {
   @column()
   declare achievements: Record<string, string> | null
 
-  @hasMany(() => Player)
+  @hasMany(() => Player, {
+    foreignKey: 'teamId',
+  })
   declare players: HasMany<typeof Player>
 
   @column.dateTime({ autoCreate: true })
