@@ -10,10 +10,13 @@
 import router from '@adonisjs/core/services/router'
 
 // Health check route
-router.get('/', async () => {
-  return {
-    hello: 'world',
-  }
+router.get('/', async ({ response }) => {
+  return response.redirect('/index.html')
+})
+
+// Serve the demo page
+router.get('/demo', async ({ response }) => {
+  return response.redirect('/index.html')
 })
 
 // API v1 routes
