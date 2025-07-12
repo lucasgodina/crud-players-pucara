@@ -11,12 +11,16 @@ import router from '@adonisjs/core/services/router'
 
 // Health check route
 router.get('/', async ({ response }) => {
-  return response.redirect('/index.html')
-})
-
-// Serve the demo page
-router.get('/demo', async ({ response }) => {
-  return response.redirect('/index.html')
+  return response.json({
+    message: 'Pucará Esports - Backend API',
+    status: 'active',
+    frontend: 'React Admin available at http://localhost:3000',
+    api: 'API v1 available at /api/v1',
+    endpoints: {
+      teams: '/api/v1/teams',
+      players: '/api/v1/players',
+    },
+  })
 })
 
 // API v1 routes

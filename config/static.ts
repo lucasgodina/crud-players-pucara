@@ -8,7 +8,7 @@ import { defineConfig } from '@adonisjs/static'
  * https://docs.adonisjs.com/guides/static-assets
  */
 const staticServerConfig = defineConfig({
-  enabled: true,
+  enabled: false, // Deshabilitado - usando React Admin como frontend
   etag: true,
   lastModified: true,
   dotFiles: 'ignore',
