@@ -4,20 +4,39 @@ const apiUrl = 'http://localhost:3333/api/v1'
 
 // Custom fetch function that handles JSON and errors
 const httpClient = async (url: string, options: RequestInit = {}) => {
-  const response = await fetch(url, {
-    ...options,
-    headers: {
-      'Content-Type': 'application/json',
-      ...options.headers,
-    },
-  })
+  console.log('=== httpClient Request ===')
+  console.log('URL:', url)
+  console.log('Options:', options)
 
-  if (!response.ok) {
-    throw new Error(`HTTP error! status: ${response.status}`)
+  try {
+    const response = await fetch(url, {
+      ...options,
+      headers: {
+        'Content-Type': 'application/json',
+        ...options.headers,
+      },
+    })
+
+    console.log('Response status:', response.status)
+    console.log('Response headers:', response.headers)
+
+    if (!response.ok) {
+      console.error('HTTP error! status:', response.status)
+      const errorText = await response.text()
+      console.error('Error response body:', errorText)
+      throw new Error(`HTTP error! status: ${response.status} - ${errorText}`)
+    }
+
+    const json = await response.json()
+    console.log('Response JSON:', json)
+    return { json }
+  } catch (error) {
+    console.error('=== httpClient Error ===')
+    console.error('Error:', error)
+    console.error('URL:', url)
+    console.error('Options:', options)
+    throw error
   }
-
-  const json = await response.json()
-  return { json }
 }
 
 // Función para convertir los nombres de campos de AdonisJS a React Admin
